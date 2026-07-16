@@ -1,0 +1,108 @@
+#pragma once
+
+#include <iostream>
+#include "clsInputValidate.h"
+#include "clsBankClient.h"
+#include "clsScreen.h"
+
+class clsUpdateClientScreen : protected clsScreen
+{
+private:
+
+	static void _ReadClientInfo(clsBankClient& Client)
+	{
+		cout << "Enter First Name: ";
+		Client.FirstName = clsInputValidate::ReadString();
+
+		cout << "\nEnter Last Name: ";
+		Client.LastName = clsInputValidate::ReadString();
+
+		cout << "\nEnter Email: ";
+		Client.Email = clsInputValidate::ReadString();
+
+		cout << "\nEnter Phone: ";
+		Client.Phone = clsInputValidate::ReadString();
+
+		cout << "\nEnter PIN Code: ";
+		Client.PINCode = clsInputValidate::ReadString();
+
+		cout << "\nEnter Balance: ";
+		Client.AccBalance = clsInputValidate::ReadDbNumber();
+	}
+
+	static void _PrintClient(clsBankClient Client)
+	{
+		cout << "\n\x1b[36mClient Card:\x1b[0m";
+		cout << "\n________________________________";
+		cout << "\n\x1b[33mFirstName   : \x1b[0m" << Client.FirstName;
+		cout << "\n\x1b[33mLastName    : \x1b[0m" << Client.LastName;
+		cout << "\n\x1b[33mFull Name   : \x1b[0m" << Client.FullName();
+		cout << "\n\x1b[33mEmail       : \x1b[0m" << Client.Email;
+		cout << "\n\x1b[33mPhone       : \x1b[0m" << Client.Phone;
+		cout << "\n\x1b[33mAcc. Number : \x1b[0m" << Client.AccNumber;
+		cout << "\n\x1b[33mPassword    : \x1b[0m" << Client.PINCode;
+		cout << "\n\x1b[33mBalance     : \x1b[32m" << Client.AccBalance << "\x1b[0m";
+		cout << "\n________________________________\n";
+	}
+
+public:
+
+	static void ShowUpdateClientScreen()
+	{
+		if (!CheckAccessRight(clsUser::enPermission::pUpdateClient))
+		{
+			return;
+		}
+
+		_DrawScreenHeader("\t  Update Client Screen");
+
+		string AccNumber = "";
+
+		cout << "Please Enter an Account Number? ";
+		AccNumber = clsInputValidate::ReadString();
+
+		while (!clsBankClient::IsClientExist(AccNumber))
+		{
+			cout << "\nAccount number is not found, Enter another one: ";
+			AccNumber = clsInputValidate::ReadString();
+		}
+
+		clsBankClient Client = clsBankClient::Find(AccNumber);
+		_PrintClient(Client);
+
+		cout << "Are You Sure You Want To Update This Client? Y/N?\n";
+
+		char Answer = 'n';
+		cin >> Answer;
+
+		if (Answer == 'Y' || Answer == 'y')
+		{
+			cout << "\n\nUpdate Client Info:";
+			cout << "\n________________________________\n";
+
+			_ReadClientInfo(Client);
+
+			clsBankClient::enSaveResults SaveResult;
+			SaveResult = Client.Save();
+
+			switch (SaveResult)
+			{
+			case  clsBankClient::enSaveResults::svSucceeded:
+			{
+				cout << "\nAccount Updated Successfully :-)\n";
+				_PrintClient(Client);
+				break;
+			}
+			case clsBankClient::enSaveResults::svFaildEmpty:
+			{
+				cout << "\nError account was not saved because it's Empty";
+				break;
+			}
+			}
+		}
+		else
+		{
+			cout << "\nOperation Is Not Compeleted :(\n";
+		}
+	}
+};
